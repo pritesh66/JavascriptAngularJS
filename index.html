@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="en" data-ng-app="dirList">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+
+    <title>Emergency Service Directory</title>
+
+
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+    <link rel="stylesheet" href="./themes/blue/style.css">
+    <link rel="stylesheet" href="./css/selectric.css">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ng-table/0.8.3/ng-table.css">
+    <link rel="stylesheet/less" type="text/css" href="styles.less"/>
+
+
+    <!-- jQuery Version 1.11.1 -->
+    <script src="js/jquery.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="js/bootstrap.min.js"></script>
+
+
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <script src="http://code.jquery.com/jquery-latest.js" type="text/javascript"></script>
+    <script src="http://code.jquery.com/jquery-1.10.2.js"></script>
+    <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js"></script>
+    <script src="http://maps.googleapis.com/maps/api/js"></script>
+    <script type="text/javascript" src="./js/dirPagination.js"></script>
+    <script type="text/javascript" src="./js/jquery.isloading.js   "></script>
+    <script src="./js/jquery.selectric.min.js"></script>
+    <script src="./myPlugin.js"></script>
+
+
+</head>
+
+<body id="myBody" ng-controller="DirController as dirCtrl">
+<header><h1>Emergency Directory Service</h1>
+</header>
+
+<div class="container">
+    <form name="searchForm" ng-submit="showResults()">
+
+        <h4>Search Criteria</h4>
+        <ul id="display">
+            <li>
+                <label>Organization Type</label> <select id="orgType" name="type" ng-model="selectedOrg"
+                                                         ng-init="selectedOrg.name = dirCtrl.default"
+                                                         ng-options="org.name for org in dirCtrl.orgs">
+                <option value="">All Organizations</option>
+            </select>
+            </li>
+            <li>
+                <label><span id="orgLabel">Organization Name</span></label> <input id="orgName"
+                                                                                   ng-model="selectedOrgName"
+                                                                                   ng-init="selectedOrgName = dirCtrl.default"
+                                                                                   name="name" type="text"> <em
+                    style="color: rgb(104, 129, 162);">*can be partial - "vol" for "Volunteer"</em>
+            </li>
+            <li>
+                <label>State </label>
+                <select id="state" name="state" ng-model="selectedState" ng-init="selectedState = dirCtrl.state"
+                        ng-change="dirCtrl.getCities(selectedState)">
+                    <option value="">
+                        All States
+                    </option>
+                    <option value="AK">AK</option>
+                    <option value="AL">AL</option>
+                    <option value="AR">AR</option>
+                    <option value="AZ">AZ</option>
+                    <option value="CA">CA</option>
+                    <option value="CO">CO</option>
+                    <option value="CT">CT</option>
+                    <option value="DC">DC</option>
+                    <option value="DE">DE</option>
+                    <option value="FL">FL</option>
+                    <option value="GA">GA</option>
+                    <option value="HI">HI</option>
+                    <option value="IA">IA</option>
+                    <option value="ID">ID</option>
+                    <option value="IL">IL</option>
+                    <option value="IN">IN</option>
+                    <option value="KS">KS</option>
+                    <option value="KY">KY</option>
+                    <option value="LA">LA</option>
+                    <option value="MA">MA</option>
+                    <option value="MD">MD</option>
+                    <option value="ME">ME</option>
+                    <option value="MI">MI</option>
+                    <option value="MN">MN</option>
+                    <option value="MO">MO</option>
+                    <option value="MS">MS</option>
+                    <option value="MT">MT</option>
+                    <option value="NC">NC</option>
+                    <option value="ND">ND</option>
+                    <option value="NE">NE</option>
+                    <option value="NH">NH</option>
+                    <option value="NJ">NJ</option>
+                    <option value="NM">NM</option>
+                    <option value="NV">NV</option>
+                    <option value="NY" selected="selected">NY</option>
+                    <option value="OH">OH</option>
+                    <option value="OK">OK</option>
+                    <option value="OR">OR</option>
+                    <option value="PA">PA</option>
+                    <option value="RI">RI</option>
+                    <option value="SC">SC</option>
+                    <option value="SD">SD</option>
+                    <option value="TN">TN</option>
+                    <option value="TX">TX</option>
+                    <option value="UT">UT</option>
+                    <option value="VA">VA</option>
+                    <option value="VT">VT</option>
+                    <option value="WA">WA</option>
+                    <option value="WI">WI</option>
+                    <option value="WV">WV</option>
+                    <option value="WY">WY</option>
+                </select> <span id="orgCitySearch"></span>
+            </li>
+            <li>
+                <label>City: </label>
+                <select id="cities" name="cities" ng-model="selectedCity" ng-init="selectedCity.city = dirCtrl.default"
+                        ng-options="getcity.city for getcity in dirCtrl.cities">
+                    <option value="">All Cities</option>
+                </select>
+            </li>
+            <li>
+                <label>County</label> <input id="county" name="county" ng-model="selectedCounty"
+                                             ng-init="selectedCounty = dirCtrl.default" type="text">
+            </li>
+            <li>
+                <label>ZIP Code</label> <input id="zip" name="zip" type="text" ng-model="selectedZip"
+                                               ng-init="selectedZip = dirCtrl.default">
+            </li>
+
+            <li>
+                <div>
+                    <br> <input value="Show Results" id="btnSearch" class="btn btn-primary btn-md" type="submit"><input
+                        id="clear" type="reset" class="btn btn-primary btn-md" value="Reset Form">
+                </div>
+            </li>
+
+        </ul>
+
+    </form>
+
+
+    <div id="tableOutput" ng-show="flag">
+        <br>
+        <hr style=" border-top: 1px solid black;" width="80%">
+        <br>
+
+        <div class="form-group" style="margin-left: 15.1%;">
+            <input type="text" ng-model="search" class="form-control" placeholder="Search"
+                   style="background-color: beige;">
+        </div>
+
+
+        <!-- Table displaying results -->
+
+        <table id="resultTable">
+            <thead>
+            <tr id="headerTable">
+                <th><a href="#resultTable" ng-click="sortType = 'type'; sortReverse = !sortReverse">Type</a>
+                    <span ng-show=" sortType == 'type' && !sortReverse"
+                          class="glyphicon glyphicon-triangle-bottom"></span>
+                    <span ng-show="sortType == 'type' && sortReverse" class="glyphicon glyphicon-triangle-top"></span>
+                </th>
+                <th><a href="#resultTable" ng-click="sortType = 'name'; sortReverse = !sortReverse">Name</a>
+                    <span ng-show="sortType == 'name' && !sortReverse"
+                          class="glyphicon glyphicon-triangle-bottom"></span>
+                    <span ng-show="sortType == 'name' && sortReverse" class="glyphicon glyphicon-triangle-top"></span>
+                </th>
+                <th><a href="#resultTable" ng-click="sortType = 'city'; sortReverse = !sortReverse">City</a>
+                    <span ng-show="sortType == 'city' && !sortReverse"
+                          class="glyphicon glyphicon-triangle-bottom"></span>
+                    <span ng-show="sortType == 'city' && sortReverse" class="glyphicon glyphicon-triangle-top"></span>
+                </th>
+                <th><a href="#resultTable" ng-click="sortType = 'county'; sortReverse = !sortReverse">County</a>
+                    <span ng-show="sortType == 'county' && !sortReverse"
+                          class="glyphicon glyphicon-triangle-bottom"></span>
+                    <span ng-show="sortType == 'county' && sortReverse" class="glyphicon glyphicon-triangle-top"></span>
+                </th>
+                <th><a href="#resultTable" ng-click="sortType = 'state'; sortReverse = !sortReverse">State</a>
+                    <span ng-show="sortType == 'state' && !sortReverse"
+                          class="glyphicon glyphicon-triangle-bottom"></span>
+                    <span ng-show="sortType == 'state' && sortReverse" class="glyphicon glyphicon-triangle-top"></span>
+                </th>
+                <th><a href="#resultTable" ng-click="sortType = 'zip'; sortReverse = !sortReverse">Zip</a>
+                    <span ng-show="sortType == 'zip' && !sortReverse"
+                          class="glyphicon glyphicon-triangle-bottom"></span>
+                    <span ng-show="sortType == 'zi[' && sortReverse" class="glyphicon glyphicon-triangle-top"></span>
+                </th>
+
+            </tr>
+            </thead>
+            <tbody>
+            <tr dir-paginate="table in tables|orderBy:sortType:sortReverse|itemsPerPage:10|filter:search">
+                <td>{{table.type}}
+                </td>
+                <td><a ng-click="getTabs(table.id)" data-toggle="modal" data-target="#myModal">{{table.name}}</a>
+                </td>
+                <td>{{table.city}}
+                </td>
+                <td>{{table.county}}
+                </td>
+                <td>{{table.state}}
+                </td>
+                <td>{{table.zip}}
+                </td>
+            </tr>
+            </tbody>
+            <label style="margin-left: 70%">Total Results Found : {{dirCtrl.totalResults}}</label>
+        </table>
+        <dir-pagination-controls id="paginationDiv"
+                                 max-size="10"
+                                 direction-links="true"
+                                 boundary-links="true" style="margin: 29%;">
+        </dir-pagination-controls>
+        <br>
+        <hr style=" border-top: 1px solid black;" width="80%">
+        <br>
+
+        <div id="website"></div>
+    </div>
+
+    <div id="messageOutput" ng-show="message">No Results Found</div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="myModal" role="dialog">
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">{{dirCtrl.head}}</h4>
+                </div>
+                <div class="modal-body">
+                    <div id="tabsOutput"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+<br><br><br>
+
+</div>
+<!-- /.container -->
+
+<br><br><br>
+
+</body>
+
+<script>
+
+    var url = "http://people.rit.edu/dmgics/754/23/proxy.php";
+
+    var app = angular.module("dirList", ['angularUtils.directives.dirPagination']);
+
+    /*-------------------------AngularJs controller--------------------------------*/
+
+
+    app.controller("DirController", ["$http", "$scope", function ($http, $scope) { //dependency injection angular http service
+
+        var self = this, tabsFlag = 0, tabFlag = 0;
+        self.orgs = []; //new user that gets typed
+        self.cities = [{city: ""}];
+        self.state = "NY";
+        self.default = "";
+        self.formData = {};
+        $scope.flag = false;
+        $scope.message = false;
+        $scope.sortType = 'name';
+        $scope.sortReverse = false;
+        self.mapMsg
+
+
+        /*-------------------------Function to list all available Organizations --------------------------------*/
+
+        self.getOrgs = function () {
+            $http.get(url + "?path=" + encodeURIComponent("/OrgTypes"), {responseType: "document"}).success(function (data) {
+
+                var allOrgTypes = data.getElementsByTagName("type");
+
+                for (var i = 0; i < allOrgTypes.length; i++) {
+                    self.orgs.push({name: allOrgTypes[i].firstChild.data});
+                }
+            });
+        };
+
+
+        /*-------------------------Function to list all available Cities based on State --------------------------------*/
+
+        self.getCities = function (state) {
+            self.cities = [];
+
+            state = state || self.state;
+
+            $http.get(url + "?path=" + encodeURIComponent("/Cities") + "?state=" + state, {responseType: "document"}).success(function (data) {
+
+                var allCities = data.getElementsByTagName("city"),
+                        flag;
+
+                for (var i = 0; i < allCities.length; i++) {
+
+                    if (allCities[i].firstChild != null) {
+                        flag = 1;
+                        self.cities.push({city: allCities[i].firstChild.data});
+                    }
+                }
+
+                if ($scope.selectedCity != null) {
+                    $scope.selectedCity.city = $scope.selectedCity.city = "";
+                }
+            });
+
+
+        };
+
+        /*-------------------------Function to show the results --------------------------------*/
+
+        $scope.showResults = function () {
+
+            var tempCity, tempState, link = "";
+
+            if (tabFlag == 1) {
+                $("#tabsOutput").hide();
+            }
+
+            $.isLoading({text: "Loading "});
+
+            $scope.tables = [];
+
+
+            if ($scope.selectedOrg != null) {
+                $scope.temp = $scope.selectedOrg.name.replace(/\s+/g, '+');
+            }
+            else {
+                $scope.temp = "";
+            }
+
+            if ($scope.selectedState != null || $scope.selectedState != "") {
+                tempState = $scope.selectedState;
+            }
+            else {
+                tempState = "";
+            }
+
+            if ($scope.selectedCity != null) {
+                tempCity = $scope.selectedCity.city.replace(/\s+/g, '+');
+            }
+            else {
+                tempCity = "";
+            }
+
+
+            link = "type=" + $scope.temp + "&name=" + $scope.selectedOrgName + "&state="
+                    + tempState + "&town=" + tempCity + "&county=" + $scope.selectedCounty
+                    + "&zip=" + $scope.selectedZip;
+
+
+            console.log(link);
+
+            $http.get(url + "?path=" + encodeURIComponent("/Organizations?" + link), {responseType: "document"}).success(function (data) {
+
+                $.isLoading("hide");
+
+
+                var id = data.getElementsByTagName("OrganizationID");
+                var type = data.getElementsByTagName("type"),
+                        name = data.getElementsByTagName("Name"),
+                        state = data.getElementsByTagName("State"),
+                        city = data.getElementsByTagName("city"),
+                        county = data.getElementsByTagName("CountyName"),
+                        zip = data.getElementsByTagName("zip"),
+                        check = 0;
+
+
+                //Push data into an array
+
+                for (var i = 0; i < id.length; i++) {
+
+                    if (zip[i].firstChild == null) {
+                        $scope.tables.push({
+                            id: id[i].firstChild.data,
+                            type: type[i].firstChild.data,
+                            name: name[i].firstChild.data,
+                            state: state[i].firstChild.data,
+                            city: city[i].firstChild.data,
+                            county: county[i].firstChild.data,
+                            zip: ""
+                        });
+
+                    } else {
+                        $scope.tables.push({
+                            id: id[i].firstChild.data,
+                            type: type[i].firstChild.data,
+                            name: name[i].firstChild.data,
+                            state: state[i].firstChild.data,
+                            city: city[i].firstChild.data,
+                            county: county[i].firstChild.data,
+                            zip: zip[i].firstChild.data
+                        });
+                    }
+                    check = 1;
+                }
+
+                self.totalResults = $scope.tables.length;
+                console.log(self.totalResults);
+
+                if (check == 1) {
+                    $scope.flag = true;
+                    $scope.message = false;
+                }
+                else {
+                    $scope.message = true;
+                    $scope.flag = false;
+                }
+
+                $("#website").getState(tempState);
+
+            });
+        }
+
+
+        /*-------------------------Function to create Tabs --------------------------------*/
+
+        $scope.getTabs = function (id) {
+
+            if (tabFlag == 1) {
+                $("#tabsOutput").show();
+            }
+
+            tabFlag = 1;
+
+            $http.get(url + "?path=" + encodeURIComponent("/Application/Tabs") + "?orgId=" + id, {responseType: "document"}).success(function (data) {
+
+                var arr = [], k = 0, x = "";
+
+                if (tabsFlag == 1) {
+                    $("#tabsOutput").tabs("destroy");
+                }
+
+                if ($(data).find("error").length != 0) {
+                    console.error("AJAX error");
+                }
+                else {
+                    x += "<ul id='tabsListUl'>";
+
+                    $("row", data).each(function () {
+                        x += "<li><a href = '#" + $(this).find("Tab").text() + "' > " + $(this).find("Tab").text() + "</li>";
+                        arr[k] = $(this).find("Tab").text();
+                        k++;
+
+                    });
+
+                    x += "</ul>";
+
+                    // loop to get data for each tab
+
+                    for (k = 0; k < arr.length; k++) {
+
+                        //for General Tab
+
+                        if (arr[k] == "General") {
+
+                            x += "<div id='General' class='tabsData' >";
+
+                            x += "<h2>Description</h2><br><br>";
+                            $http.get(url + "?path=/" + id + encodeURIComponent("/General"), {responseType: "document"}).success(function (genData) {
+                                var ele = angular.element(document.querySelector("#General"));
+
+                                // console.log(genData);
+                                $('data', genData).each(function () {
+
+                                    ele.append("<label class='head'>Name:&nbsp</label><label> " + $('name', this).text() + "</label><br><br>");
+                                    self.head = $('name', this).text();
+                                    if ($('description', this).text() != "null") {
+                                        ele.append("<label class='head'>Description:&nbsp</label><label>" + $('description', this).text() + "</label><br><br>");
+                                    }
+                                    else {
+                                        ele.append("<label class='head'>Description:</label><br><br>");
+                                    }
+                                    if ($('email', this).text() != "null") {
+                                        ele.append("<label class='head'>Email:&nbsp</label><label id='email'> " + $('email', this).text() + "</label><br><br>");
+                                        console.log($("#email").text());
+                                    }
+                                    else {
+                                        ele.append("<label class='head'>Email:</label><br><br>");
+                                    }
+                                    if ($('website', this).text() != "null") {
+                                        ele.append("<label class='head'>Website:&nbsp</label><label>" + $('website', this).text() + "</label><br><br>");
+                                    } else {
+                                        ele.append("<label class='head'>Website:</label><br><br>");
+                                    }
+                                    if ($('nummembers', this).text() != "null") {
+                                        ele.append("<label class='head'>Number of Members:&nbsp</label><label>" + $('nummembers', this).text() + "</label><br><br>");
+                                    } else {
+                                        ele.append("<label class='head'>Number of Members:</label><br><br>");
+                                    }
+                                    if ($('numcalls', this).text() != "null") {
+                                        ele.append("<label class='head'>Number of calls last year:&nbsp</label><label> " + $('numcalls', this).text() + "</label>");
+                                    } else {
+                                        ele.append("<label class='head'>Number of calls last year: </label>");
+                                    }
+                                });
+
+                            });
+
+                            x += "</div>";
+                        }
+
+
+                        //For Locations tab
+
+                        if (arr[k] == "Locations") {
+
+                            x += "<div id='Locations'>";
+                            x += "<div id='googleMap' style='width:500px;height:400px;'></div>";
+
+                            $http.get(url + "?path=/" + id + encodeURIComponent("/Locations"), {responseType: "document"}).success(function (locData) {
+                                var ele = angular.element(document.querySelector("#Locations"));
+
+                                // console.log(locData);
+
+                                var type = locData.getElementsByTagName("type"),
+                                        addr1 = locData.getElementsByTagName("address1"),
+                                        zip = locData.getElementsByTagName("zip"),
+                                        city = locData.getElementsByTagName("city"),
+                                        state = locData.getElementsByTagName("state"),
+                                        phone = locData.getElementsByTagName("phone"),
+                                        ttyphone = locData.getElementsByTagName("ttyphone"),
+                                        fax = locData.getElementsByTagName("fax"),
+                                        latitude = locData.getElementsByTagName("latitude"),
+                                        longitude = locData.getElementsByTagName("longitude"),
+                                        countyName = locData.getElementsByTagName("countyName");
+
+                                //var countyId = locData.getElementsByTagName("countyId");
+
+                                var siteId = locData.getElementsByTagName("siteId");
+                                // var addr2 = locData.getElementsByTagName("address2");
+
+                                var opt = "<select id='selectLoc'>";
+                                for (var i = 0; i < type.length; i++) {
+                                    if (i == 0) {
+                                        opt += ("<option   value='" + siteId[i].firstChild.data + "' selected>Location:" + type[i].firstChild.data + "</option>");
+                                    } else {
+                                        opt += ("<option  value='" + siteId[i].firstChild.data + "'>Location:" + type[i].firstChild.data + "</option>");
+                                    }
+                                }
+
+                                opt += ("</select>");
+                                ele.append(opt);
+
+                                $('#selectLoc').selectric();
+
+                                var mapFlag = 0, long = "", lat = "";
+
+                                var div = "<div id='innerDiv'>";
+                                div += "<br>";
+                                div += "<label class='head'>Type:&nbsp</label><label>" + type[0].firstChild.data + "</label><br><br>";
+                                div += "<label class='head'>Address:&nbsp</label><label> " + addr1[0].firstChild.data + "</label><br><br>";
+                                div += "<label class='head'>City:&nbsp</label><label> " + city[0].firstChild.data + "</label><br><br>";
+                                div += "<label class='head'>State:&nbsp</label><label> " + state[0].firstChild.data + "</label><br><br>";
+                                div += "<label class='head'>County Name:&nbsp</label><label>" + countyName[0].firstChild.data + "</label><br><br>";
+                                div += "<label class='head'>Zip:&nbsp</label><label> " + zip[0].firstChild.data + "</label><br><br>";
+
+                                if (phone[0].firstChild != null) {
+                                    if (phone[0].firstChild.data == "null") {
+                                        div += "<label class='head'>Phone:</label><br><br>";
+                                    }
+                                    else {
+                                        div += "<label class='head'>Phone:&nbsp</label><label> " + phone[0].firstChild.data + "</label><br><br>";
+                                    }
+                                }
+                                else {
+                                    div += "<label class='head'>Phone:</label><br><br>";
+
+                                }
+
+
+                                if (ttyphone.length != 0) {
+                                    if (ttyphone[0].firstChild != null || ttyphone[0].firstChild != undefined) {
+                                        if (ttyphone[0].firstChild.data == "null") {
+                                            div += "<label class='head'>TTYPhone:</label><br><br>";
+                                        }
+                                        else {
+                                            div += "<label class='head'>TTYPhone:&nbsp</label><label> " + ttyphone[0].firstChild.data + "</label><br><br>";
+                                        }
+                                    }
+                                    else {
+                                        div += "<label class='head'>TTYPhone:</label><br><br>";
+                                    }
+                                } else {
+                                    div += "<label class='head'>TTYPhone:</label><br><br>";
+                                }
+
+                                if (fax.length != 0)
+                                    if (fax[0].firstChild != null) {
+                                        if (fax[0].firstChild.data == "null") {
+                                            div += "<label class='head'>Fax:</label><br><br>";
+                                        }
+                                        else {
+                                            div += "<label class='head'>Fax:&nbsp</label><label> " + fax[0].firstChild.data + "</label><br><br>";
+                                        }
+                                    }
+                                    else {
+                                        div += "<label class='head'>Fax:</label><br><br>";
+
+                                    }
+
+
+                                if (latitude.length != 0)
+                                    if (latitude[0].firstChild != null) {
+                                        if (latitude[0].firstChild.data == "null") {
+                                            div += "<label class='head'>Latitude:</label><br><br>";
+
+                                        }
+                                        else {
+                                            div += "<label class='head'>Latitude:&nbsp</label><label> " + latitude[0].firstChild.data + "</label><br><br>";
+                                            lat = latitude[0].firstChild.data;
+                                            mapFlag = 1;
+                                        }
+                                    }
+                                    else {
+                                        div += "<label class='head'>Latitude:</label><br><br>";
+
+
+                                    }
+
+                                if (longitude.length != 0)
+                                    if (longitude[0].firstChild != null) {
+                                        if (longitude[0].firstChild.data == "null") {
+                                            div += "<label class='head'>Longitude:</label>";
+
+                                        }
+                                        else {
+                                            div += "<label class='head'>Longitude:&nbsp</label><label> " + longitude[0].firstChild.data + "</label>";
+                                            long = longitude[0].firstChild.data;
+                                            mapFlag = 1;
+                                        }
+                                    }
+                                    else {
+                                        div += "<label class='head'>Longitude:</label>";
+                                        mapFlag = 1;
+
+                                    }
+
+
+                                div += "</div>";
+                                ele.append(div);
+                                self.initialize(lat, long, mapFlag);
+
+                                $("#selectLoc").change(function () {
+
+                                    mapFlag = 0;
+
+                                    //Data for on select change
+
+                                    for (i = 0; i < type.length; i++) {
+                                        if ($("#selectLoc").val() == siteId[i].firstChild.data) {
+                                            $("#innerDiv").remove();
+                                            div = "<div id='innerDiv'>";
+                                            div += "<br>";
+                                            div += "<label class='head'>Type:&nbsp</label><label> " + type[i].firstChild.data + "</label><br><br>";
+                                            div += "<label class='head'>Address:&nbsp</label><label> " + addr1[i].firstChild.data + "</label><br><br>";
+                                            div += "<label class='head'>City:&nbsp</label><label> " + city[i].firstChild.data + "</label><br><br>";
+                                            div += "<label class='head'>State:&nbsp</label><label> " + state[i].firstChild.data + "</label><br><br>";
+                                            div += "<label class='head'>County:&nbsp</label><label> " + countyName[i].firstChild.data + "</label><br><br>";
+                                            div += "<label class='head'>Zip:&nbsp</label><label>" + zip[i].firstChild.data + "</label><br><br>";
+
+                                            if (phone.length != 0)
+                                                if (phone[i].firstChild != null) {
+                                                    if (phone[i].firstChild.data == "null") {
+                                                        div += "<label class='head'>Phone:</label><br><br>";
+                                                    }
+                                                    else {
+                                                        div += "<label class='head'>Phone:&nbsp</label><label> " + phone[i].firstChild.data + "</label><br><br>";
+                                                    }
+                                                }
+                                                else {
+                                                    div += "<label class='head'>Phone:</label><br><br>";
+
+                                                }
+
+                                            if (ttyphone.length != 0)
+                                                if (ttyphone[i].firstChild != null) {
+                                                    if (ttyphone[i].firstChild.data == "null") {
+                                                        div += "<label class='head'>TTYPhone:</label><br><br>";
+                                                    }
+                                                    else {
+                                                        div += "<label class='head'>TTYPhone:&nbsp</label><label> " + ttyphone[i].firstChild.data + "</label><br><br>";
+                                                    }
+                                                }
+                                                else {
+                                                    div += "<label class='head'>TTYPhone:</label><br><br>";
+
+                                                }
+
+                                            if (fax.length != 0)
+                                                if (fax[i].firstChild != null) {
+                                                    if (fax[i].firstChild.data == "null") {
+                                                        div += "<label class='head'>Fax:</label><br><br>";
+                                                    }
+                                                    else {
+                                                        div += "<label class='head'>Fax:&nbsp</label><label> " + fax[i].firstChild.data + "</label><br><br>";
+                                                    }
+                                                }
+                                                else {
+                                                    div += "<label class='head'>Fax:</label><br><br>";
+
+                                                }
+
+                                            if (latitude.length != 0)
+                                                if (latitude[i].firstChild != null) {
+                                                    if (latitude[i].firstChild.data == "null") {
+                                                        div += "<label class='head'>Latitude:</label><br><br>";
+                                                    }
+                                                    else {
+                                                        div += "<label class='head'>Latitude:&nbsp</label><label> " + latitude[i].firstChild.data + "</label><br><br>";
+                                                        lat = latitude[i].firstChild.data;
+                                                        mapFlag = 1;
+                                                    }
+                                                }
+                                                else {
+                                                    div += "<label class='head'>Latitude:</label><br><br>";
+
+                                                }
+
+                                            if (longitude.length != 0)
+                                                if (longitude[i].firstChild != null) {
+                                                    if (longitude[i].firstChild.data == "null") {
+                                                        div += "<label class='head'>Longitude:</label>";
+                                                    }
+                                                    else {
+                                                        div += "<label class='head'>Longitude:&nbsp</label><label> " + longitude[i].firstChild.data + "</label>";
+                                                        long = longitude[i].firstChild.data;
+                                                        mapFlag = 1;
+                                                    }
+
+                                                }
+                                                else {
+                                                    div += "<label class='head'>longitude:</label>";
+
+                                                }
+
+                                            div += "</div>";
+                                            ele.append(div);
+                                            self.initialize(lat, long, mapFlag);
+
+                                        }
+                                    }
+
+                                });
+                            });
+
+                            x += "</div>";
+                        }
+
+                        //Treatment Tab
+
+                        if (arr[k] == "Treatment") {
+
+                            x += "<div id='Treatment'>";
+
+                            $http.get(url + "?path=/" + id + encodeURIComponent("/Treatments"), {responseType: "document"}).success(function (treatmentsData) {
+
+                                // console.log(treatmentsData);
+
+                                var ele = angular.element(document.querySelector("#Treatment"));
+
+                                var tab = "", flag = false;
+
+                                tab += "<table id='trainingTable' class='tablesorter'>";
+                                tab += "<thead>";
+                                tab += "<tr>";
+                                tab += "<th>Type</th>";
+                                tab += "<th>Abbreviation</th>";
+                                tab += "</tr>";
+                                tab += "</thead>";
+
+
+                                $('treatment', treatmentsData).each(function () {
+                                    //  console.log($("type",this).text());
+                                    flag = true;
+                                    tab += "<tr>";
+                                    tab += "<td>" + $("type", this).text() + "</td>";
+                                    tab += "<td>" + $("abbreviation", this).text() + "</td>";
+                                    tab += "</tr>";
+                                });
+
+
+                                tab += "</table>";
+
+                                if (flag == true) {
+                                    ele.append(tab);
+                                } else {
+
+                                    var msg = "<br><p>No data Found!!</p>";
+                                    msg += "</div>";
+
+                                    ele.append(msg);
+                                }
+
+                            });
+
+
+                            x += "</div>";
+
+                        }
+
+
+                        // Tabs for Training
+
+                        if (arr[k] == "Training") {
+
+                            x += "<div id='Training'>";
+
+                            $http.get(url + "?path=/" + id + encodeURIComponent("/Training"), {responseType: "document"}).success(function (trainingData) {
+
+                                var ele = angular.element(document.querySelector("#Training")),
+                                        tab = "", flag = false;
+
+                                tab += "<table id='trainingTable' class='tablesorter'>";
+                                tab += "<thead>";
+                                tab += "<tr>";
+                                tab += "<th>Type</th>";
+                                tab += "<th>Abbreviation</th>";
+                                tab += "</tr>";
+                                tab += "</thead>";
+
+
+                                $('training', trainingData).each(function () {
+                                    // console.log($("type",this).text());
+
+                                    flag = true;
+                                    tab += "<tr>";
+                                    tab += "<td>" + $("type", this).text() + "</td>";
+                                    tab += "<td>" + $("abbreviation", this).text() + "</td>";
+                                    tab += "</tr>";
+                                });
+
+
+                                tab += "</table>";
+
+                                if (flag == true) {
+                                    ele.append(tab);
+                                } else {
+
+                                    var msg = "<br><p>No data Found!!</p>";
+                                    msg += "</div>";
+
+                                    ele.append(msg);
+                                }
+
+                            });
+
+                            x += "</div>";
+
+                        }
+
+
+                        // Tabs for Facilities
+
+                        if (arr[k] == "Facilities") {
+
+                            x += "<div id='Facilities'>";
+
+                            $http.get(url + "?path=/" + id + encodeURIComponent("/Facilities"), {responseType: "document"}).success(function (facilitiesData) {
+
+                                // console.log(facilitiesData);
+
+                                var ele = angular.element(document.querySelector("#Facilities"));
+
+                                var tab = "", flag = false;
+
+                                tab += "<table id='trainingTable' class='tablesorter'>";
+                                tab += "<thead>";
+                                tab += "<tr>";
+                                tab += "<th>Name</th>";
+                                tab += "<th>Quantity</th>";
+                                tab += "<th>Description</th>";
+                                tab += "</tr>";
+                                tab += "</thead>";
+
+
+                                $('facility', facilitiesData).each(function () {
+                                    // console.log($("type",this).text());
+                                    flag = true;
+                                    tab += "<tr>";
+                                    tab += "<td>" + $("type", this).text() + "</td>";
+                                    tab += "<td>" + $("quantity", this).text() + "</td>";
+                                    tab += "<td>" + $("description", this).text() + "</td>";
+                                    tab += "</tr>";
+                                });
+
+
+                                tab += "</table>";
+
+
+                                if (flag == true) {
+                                    ele.append(tab);
+                                } else {
+
+                                    var msg = "<br><p>No data Found!!</p>";
+                                    msg += "</div>";
+
+                                    ele.append(msg);
+                                }
+
+
+                            });
+
+                            x += "</div>";
+
+                        }
+
+                        // Tab for physicians
+
+                        if (arr[k] == "Physicians") {
+
+                            x += "<div id='Physicians'>";
+
+                            $http.get(url + "?path=/" + id + encodeURIComponent("/Physicians"), {responseType: "document"}).success(function (physiciansData) {
+
+                                console.log(physiciansData);
+
+                                var ele = angular.element(document.querySelector("#Physicians"));
+
+                                var tab = "", flag = false;
+
+                                tab += "<table id='trainingTable' class='tablesorter'>";
+                                tab += "<thead>";
+                                tab += "<tr>";
+                                tab += "<th>Name</th>";
+                                tab += "<th>Licence</th>";
+                                tab += "<th>Contact</th>";
+                                tab += "</tr>";
+                                tab += "</thead>";
+                                tab += "<tbody id='tbodyPhysician'>";
+
+                                $('physician', physiciansData).each(function () {
+                                    // console.log($("type",this).text());
+
+                                    flag = true;
+                                    tab += "<tr>";
+                                    tab += "<td>" + $("fName", this).text() + " " + $("mName", this).text() + " " + $("lName", this).text() + "</td>";
+                                    if ($("license", this).text() != "null") {
+                                        tab += "<td>" + $("license", this).text() + "</td>";
+                                    } else {
+                                        tab += "<td> </td>";
+                                    }
+                                    tab += "<td>" + $("phone", this).text() + "</td>";
+                                    tab += "</tr>";
+                                });
+
+                                tab += "</tbody>";
+                                tab += "</table>";
+
+                                if (flag == true) {
+                                    ele.append(tab);
+                                } else {
+
+                                    var msg = "<br><p>No data Found!!</p>";
+                                    msg += "</div>";
+
+                                    ele.append(msg);
+                                }
+
+                            });
+
+                            x += "</div>";
+
+                        }
+
+
+                        // Tab for Equipments
+
+                        if (arr[k] == "Equipment") {
+
+                            x += "<div id='Equipment'>";
+
+                            $http.get(url + "?path=/" + id + encodeURIComponent("/Equipment"), {responseType: "document"}).success(function (equipmentData) {
+
+                                console.log(equipmentData);
+
+                                var ele = angular.element(document.querySelector("#Equipment")),
+                                        tab = "", flag = false;
+
+                                tab = "<div id='innerPeopleDiv'>";
+
+                                tab += "<table id='trainingTable' class='tablesorter'>";
+                                tab += "<thead>";
+                                tab += "<tr>";
+                                tab += "<th>Type ID</th>";
+                                tab += "<th>Type</th>";
+                                tab += "<th>Quantity</th>";
+                                tab += "<th>Description</th>";
+                                tab += "</tr>";
+                                tab += "</thead>";
+                                tab += "<tbody id='tbodyPhysician'>";
+
+                                $('equipment', equipmentData).each(function () {
+                                    // console.log($("type",this).text());
+                                    flag = true;
+
+                                    tab += "<tr>";
+                                    tab += "<td>" + $("typeId", this).text() + "</td>";
+                                    tab += "<td>" + $("type", this).text() + "</td>";
+                                    tab += "<td>" + $("quantity", this).text() + "</td>";
+                                    tab += "<td>" + $("decription", this).text() + "</td>";
+                                    tab += "</tr>";
+                                });
+
+                                tab += "</tbody>";
+                                tab += "</table>";
+                                tab += "</div>";
+
+
+                                if (flag == true) {
+                                    ele.append(tab);
+                                } else {
+
+                                    var msg = "<br><p>No data Found!!</p>";
+                                    msg += "</div>";
+
+                                    ele.append(msg);
+                                }
+
+                            });
+
+                            x += "</div>";
+
+                        }
+
+                        //Tabs for people
+
+                        if (arr[k] == "People") {
+
+                            x += "<div id='People'>";
+
+                            $http.get(url + "?path=/" + id + encodeURIComponent("/People"), {responseType: "document"}).success(function (peopleData) {
+
+                                // console.log(peopleData);
+
+                                var ele = angular.element(document.querySelector("#People")),
+                                        site = peopleData.getElementsByTagName("site");
+
+                                var opt = "<select id='selectPeople'>";
+                                for (var i = 0; i < site.length; i++) {
+                                    if (i == 0) {
+                                        opt += ("<option   value='" + site[i].getAttribute("siteId") + "' selected>" + site[i].getAttribute("address") + "</option>");
+                                    } else {
+                                        opt += ("<option  value='" + site[i].getAttribute("siteId") + "'>" + site[i].getAttribute("address") + "</option>");
+                                    }
+                                }
+                                opt += ("</select>");
+                                ele.append(opt);
+
+
+                                $('#selectPeople').selectric();
+
+
+                                var tempfName, templName, tempmName, roleName;
+                                var count = site[0].getElementsByTagName("personCount");
+
+                                console.log(count);
+                                if (count[0].innerHTML != "0") {
+                                    var tab = "<div id='innerPeopleDiv'>";
+                                    tab += "<br><p>Site " + site[0].getAttribute("siteId") + ": " + site[0].getAttribute("address") + "</p>";
+                                    tab += "<table id='trainingTable' class='tablesorter'>";
+                                    tab += "<thead>";
+                                    tab += "<tr>";
+                                    tab += "<td>Name</td>";
+                                    tab += "<td>Role</td>";
+                                    tab += "</tr>";
+                                    tab += "</thead>";
+                                    var temp = site[0].getElementsByTagName("person");
+
+                                    for (i = 0; i < temp.length; i++) {
+                                        tempfName = temp[i].getElementsByTagName("fName");
+                                        templName = temp[i].getElementsByTagName("lName");
+                                        tempmName = temp[i].getElementsByTagName("mName");
+                                        roleName = temp[i].getElementsByTagName("role");
+                                        if (tempfName[0].innerHTML == "null") {
+                                            tempfName[0].innerHTML = "";
+                                        }
+                                        if (tempmName[0].innerHTML == "null") {
+                                            tempmName[0].innerHTML = "";
+                                        }
+                                        if (templName[0].innerHTML == "null") {
+                                            templName[0].innerHTML = "";
+                                        }
+                                        tab += "<tr>";
+                                        tab += "<td>" + tempfName[0].innerHTML + " " + tempmName[0].innerHTML + " " + templName[0].innerHTML + "</td>";
+                                        tab += "<td>" + roleName[0].innerHTML + "</td>";
+                                        tab += "</tr>";
+                                    }
+
+                                    tab += "</table>";
+
+                                    tab += "</div>";
+
+                                    ele.append(tab);
+                                } else {
+                                    tab = "<div id='innerPeopleDiv'>";
+
+                                    tab += "<br><br><p>No data Found!!</p>";
+                                    tab += "</div>";
+
+                                    ele.append(tab);
+
+                                }
+
+                                $("#selectPeople").change(function () {
+
+                                    for (i = 0; i < site.length; i++) {
+                                        if ($("#selectPeople").val() == site[i].getAttribute("siteId")) {
+                                            $("#innerPeopleDiv").remove();
+
+                                            var count = site[i].getElementsByTagName("personCount");
+
+                                            if (count[0].innerHTML != "0") {
+
+                                                temp = site[i].getElementsByTagName("person");
+                                                tab = "<div id='innerPeopleDiv' class='tablesorter'>";
+
+                                                tab += "<br><p>Site " + site[i].getAttribute("siteId") + ": " + site[i].getAttribute("address") + " </p>";
+                                                tab += "<table id='trainingTable' >";
+                                                tab += "<thead>";
+                                                tab += "<tr>";
+                                                tab += "<td>Name</td>";
+                                                tab += "<td>Role</td>";
+                                                tab += "</tr>";
+                                                tab += "</thead>";
+
+                                                // console.log(site[i].getElementsByTagName("personCount"));
+
+                                                for (var k = 0; k < temp.length; k++) {
+                                                    tempfName = temp[k].getElementsByTagName("fName");
+                                                    templName = temp[k].getElementsByTagName("lName");
+                                                    tempmName = temp[k].getElementsByTagName("mName");
+                                                    roleName = temp[k].getElementsByTagName("role");
+                                                    if (tempfName[0].innerHTML == "null") {
+                                                        tempfName[0].innerHTML = "";
+                                                    }
+                                                    if (tempmName[0].innerHTML == "null") {
+                                                        tempmName[0].innerHTML = "";
+                                                    }
+                                                    if (templName[0].innerHTML == "null") {
+                                                        templName[0].innerHTML = "";
+                                                    }
+                                                    tab += "<tr>";
+                                                    tab += "<td>" + tempfName[0].innerHTML + " " + tempmName[0].innerHTML + " " + templName[0].innerHTML + "</td>";
+                                                    tab += "<td>" + roleName[0].innerHTML + "</td>";
+                                                    tab += "</tr>";
+                                                }
+
+                                                tab += "</div>";
+
+                                                ele.append(tab);
+                                            } else {
+                                                tab = "<div id='innerPeopleDiv'>";
+
+                                                tab += "<br><br><p>No data Found!!</p>";
+                                                tab += "</div>";
+
+                                                ele.append(tab);
+
+                                            }
+                                        }
+                                    }
+                                });
+                            });
+
+                            x += "</div>";
+
+                        }
+                    }
+
+                    $("#tabsOutput").html(x).tabs();
+                    tabsFlag = 1;
+                }
+            });
+        };
+
+
+        /*----------------------------Function of Google Map Api------------------------------*/
+
+        self.initialize = function (lat, long, mapFlag) {
+
+            if (self.mapMsg == 1) {
+
+                var div = document.getElementById("googleMap");
+                while (div.firstChild) {
+                    div.removeChild(div.firstChild);
+                }
+            }
+
+            if (mapFlag == 1) {
+                var latLng = new google.maps.LatLng(lat, long);
+                var mapProp = {
+                    center: latLng,
+                    zoom: 10,
+                    mapTypeId: google.maps.MapTypeId.ROADMAP
+                };
+
+                var map = new google.maps.Map(document.getElementById("googleMap"), mapProp);
+
+
+                setTimeout(function () {
+                    google.maps.event.trigger(map, "resize");
+                }, 3000);
+
+
+                var marker = new google.maps.Marker({
+                    position: latLng,
+                    map: map
+                });
+
+                map.addListener('center_changed', function () {
+
+                    window.setTimeout(function () {
+                        map.panTo(marker.getPosition());
+                    }, 100);
+                });
+
+            }
+            else {
+                var div = document.getElementById("googleMap");
+                var msg = document.createTextNode("No Map Available");
+                div.appendChild(msg);
+                self.mapMsg = 1;
+            }
+
+        }
+
+        self.getCities();
+        self.getOrgs();
+    }]);
+
+
+</script>
+
+</html>
